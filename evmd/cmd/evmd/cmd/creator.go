@@ -89,7 +89,7 @@ func (a appCreator) newApp(
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(server.FlagIAVLCacheSize))),
 	}
 
-	return evmd.NewExampleApp(
+	return evmd.NewHORSCHAINApp(
 		logger,
 		db,
 		true,
@@ -129,7 +129,7 @@ func (a appCreator) appExport(
 		loadLatest = true
 	}
 
-	evmApp = evmd.NewExampleApp(
+	evmApp = evmd.NewHORSCHAINApp(
 		logger,
 		db,
 		loadLatest,

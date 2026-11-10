@@ -55,7 +55,7 @@ func NewRootCmd() *cobra.Command {
 	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
 	// and the CLI options for the modules
 	// add keyring to autocli opts
-	tempApp := evmd.NewExampleApp(
+	tempApp := evmd.NewHORSCHAINApp(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),
 		true,
@@ -83,7 +83,7 @@ func NewRootCmd() *cobra.Command {
 		WithLedgerHasProtobuf(true)
 
 	rootCmd := &cobra.Command{
-		Use:   "evmd",
+		Use:   "horschaind",
 		Short: "exemplary Cosmos EVM app",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
@@ -305,7 +305,7 @@ func newApp(
 		baseapp.SetChainID(chainID),
 	}
 
-	return evmd.NewExampleApp(
+	return evmd.NewHORSCHAINApp(
 		logger, db, true,
 		appOpts,
 		baseappOptions...,
@@ -347,13 +347,13 @@ func appExport(
 	}
 
 	if height != -1 {
-		exampleApp = evmd.NewExampleApp(logger, db, false, appOpts, baseapp.SetChainID(chainID))
+		exampleApp = evmd.NewHORSCHAINApp(logger, db, false, appOpts, baseapp.SetChainID(chainID))
 
 		if err := exampleApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	} else {
-		exampleApp = evmd.NewExampleApp(logger, db, true, appOpts, baseapp.SetChainID(chainID)) // TODO:VLAD - Remove // TODO:VLAD - Remove appoptions and evmchainid
+		exampleApp = evmd.NewHORSCHAINApp(logger, db, true, appOpts, baseapp.SetChainID(chainID)) // TODO:VLAD - Remove // TODO:VLAD - Remove appoptions and evmchainid
 	}
 
 	return exampleApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
