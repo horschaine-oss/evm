@@ -135,7 +135,8 @@ func init() {
 	defaultNodeHome = evmconfig.MustGetDefaultNodeHome()
 }
 
-const appName = "evmd"
+const exampleAppName = "evmd"
+const horschainAppName = "horschain"
 
 // defaultNodeHome default home directories for the application daemon
 var defaultNodeHome string
@@ -205,6 +206,28 @@ func NewExampleApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *EVMD {
+	return newApp(logger, db, loadLatest, appOpts, exampleAppName, baseAppOptions...)
+}
+
+// NewHORSCHAINApp returns a reference to an initialized HORSCHAIN application.
+func NewHORSCHAINApp(
+	logger log.Logger,
+	db dbm.DB,
+	loadLatest bool,
+	appOpts servertypes.AppOptions,
+	baseAppOptions ...func(*baseapp.BaseApp),
+) *EVMD {
+	return newApp(logger, db, loadLatest, appOpts, horschainAppName, baseAppOptions...)
+}
+
+func newApp(
+	logger log.Logger,
+	db dbm.DB,
+	loadLatest bool,
+	appOpts servertypes.AppOptions,
+	baseAppName string,
+	baseAppOptions ...func(*baseapp.BaseApp),
+) *EVMD {
 	evmChainID := cast.ToUint64(appOpts.Get(srvflags.EVMChainID))
 	encodingConfig := evmencoding.MakeConfig(evmChainID)
 
@@ -221,7 +244,7 @@ func NewExampleApp(
 	)
 
 	bApp := baseapp.NewBaseApp(
-		appName,
+		baseAppName,
 		logger,
 		db,
 		// use transaction decoder to support the sdk.Tx interface instead of sdk.StdTx
