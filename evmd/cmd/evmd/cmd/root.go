@@ -84,7 +84,7 @@ func NewRootCmd() *cobra.Command {
 
 	rootCmd := &cobra.Command{
 		Use:   "horschaind",
-		Short: "exemplary Cosmos EVM app",
+		Short: "HORSCHAIN blockchain application",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
@@ -125,7 +125,7 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			customAppTemplate, customAppConfig := config.InitAppConfig(types.DefaultEVMExtendedDenom, types.DefaultEVMChainID) // TODO:VLAD - Remove this
+			customAppTemplate, customAppConfig := config.InitAppConfig(evmd.HORSCHAINBaseDenom, types.DefaultEVMChainID) // TODO:VLAD - Remove this
 			customTMConfig := initCometConfig()
 
 			return sdkserver.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customTMConfig)
@@ -160,13 +160,19 @@ func initCometConfig() *cmtcfg.Config {
 func initRootCmd(rootCmd *cobra.Command, evmApp *evmd.EVMD) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
+	sdk.DefaultBondDenom = evmd.HORSCHAINBaseDenom
 
 	defaultNodeHome := config.MustGetDefaultNodeHome()
 	sdkAppCreator := func(l log.Logger, d dbm.DB, ao servertypes.AppOptions) servertypes.Application {
 		return newApp(l, d, ao)
 	}
+	initCmd := genutilcli.InitCmd(evmApp.BasicModuleManager, defaultNodeHome)
+	if err := initCmd.Flags().Set(genutilcli.FlagDefaultBondDenom, evmd.HORSCHAINBaseDenom); err != nil {
+		panic(err)
+	}
+
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(evmApp.BasicModuleManager, defaultNodeHome),
+		initCmd,
 		genutilcli.Commands(evmApp.TxConfig(), evmApp.BasicModuleManager, defaultNodeHome),
 		cmtcli.NewCompletionCmd(rootCmd, true),
 		evmdebug.Cmd(),

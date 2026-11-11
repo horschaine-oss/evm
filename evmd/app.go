@@ -138,6 +138,46 @@ func init() {
 const exampleAppName = "evmd"
 const horschainAppName = "horschain"
 
+type horschainBankAppModuleBasic struct {
+	bank.AppModuleBasic
+}
+
+func (horschainBankAppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(NewBankGenesisState())
+}
+
+type horschainMintAppModuleBasic struct {
+	mint.AppModuleBasic
+}
+
+func (horschainMintAppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(NewMintGenesisState())
+}
+
+type horschainEVMAppModuleBasic struct {
+	vm.AppModuleBasic
+}
+
+func (horschainEVMAppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(NewEVMGenesisState())
+}
+
+type horschainStakingAppModuleBasic struct {
+	staking.AppModuleBasic
+}
+
+func (horschainStakingAppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(NewStakingGenesisState())
+}
+
+type horschainGovAppModuleBasic struct {
+	gov.AppModuleBasic
+}
+
+func (horschainGovAppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(NewGovGenesisState())
+}
+
 // defaultNodeHome default home directories for the application daemon
 var defaultNodeHome string
 
@@ -575,6 +615,8 @@ func newApp(
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 
 	vmModule := vm.NewAppModule(app.EVMKeeper, app.AccountKeeper, app.BankKeeper, app.AccountKeeper.AddressCodec())
+	bankModule := bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, nil)
+	mintModule := mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, nil, nil)
 
 	/****  Module Options ****/
 
@@ -586,10 +628,10 @@ func newApp(
 			app, app.txConfig,
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, nil),
+		bankModule,
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, nil),
-		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, nil, nil),
+		mintModule,
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, nil, app.interfaceRegistry),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, nil),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, nil),
@@ -616,9 +658,12 @@ func newApp(
 		app.ModuleManager,
 		map[string]module.AppModuleBasic{
 			genutiltypes.ModuleName:     genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-			stakingtypes.ModuleName:     staking.AppModuleBasic{},
-			govtypes.ModuleName:         gov.NewAppModuleBasic(nil),
+			stakingtypes.ModuleName:     horschainStakingAppModuleBasic{AppModuleBasic: staking.AppModuleBasic{}},
+			govtypes.ModuleName:         horschainGovAppModuleBasic{AppModuleBasic: gov.NewAppModuleBasic(nil)},
 			ibctransfertypes.ModuleName: transfer.AppModuleBasic{},
+			banktypes.ModuleName:        horschainBankAppModuleBasic{AppModuleBasic: bank.AppModuleBasic{}},
+			minttypes.ModuleName:        horschainMintAppModuleBasic{AppModuleBasic: mint.AppModuleBasic{}},
+			evmtypes.ModuleName:         horschainEVMAppModuleBasic{AppModuleBasic: vm.AppModuleBasic{}},
 		},
 	)
 	app.BasicModuleManager.RegisterLegacyAminoCodec(legacyAmino)
@@ -940,8 +985,6 @@ func (app *EVMD) DefaultGenesis() map[string]json.RawMessage {
 	evmGenState := NewEVMGenesisState()
 	genesis[evmtypes.ModuleName] = app.appCodec.MustMarshalJSON(evmGenState)
 
-	// NOTE: for the example chain implementation we are also adding a default token pair,
-	// which is the base denomination of the chain (i.e. the WEVMOS contract)
 	erc20GenState := NewErc20GenesisState()
 	genesis[erc20types.ModuleName] = app.appCodec.MustMarshalJSON(erc20GenState)
 
