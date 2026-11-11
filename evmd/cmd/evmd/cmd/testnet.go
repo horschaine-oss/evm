@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/evm/evmd/config"
 	customnetwork "github.com/cosmos/evm/evmd/tests/network"
 	cosmosevmserverconfig "github.com/cosmos/evm/server/config"
-	evmnetwork "github.com/cosmos/evm/testutil/integration/evm/network"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 
 	"cosmossdk.io/log/v2"
@@ -70,7 +69,6 @@ var (
 	unsafeStartValidatorFn UnsafeStartValidatorCmdCreator
 )
 
-const TEST_DENOM = "atest"
 
 var mnemonics = []string{
 	"copper push brief egg scan entry inform record adjust fossil boss egg comic alien upon aspect dry avoid interest fury window hint race symptom",
@@ -450,7 +448,7 @@ func initTestnetFiles(
 		accTokens := sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction)
 		accStakingTokens := sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction)
 		coins := sdk.Coins{
-			sdk.NewCoin(TEST_DENOM, accTokens),
+			sdk.NewCoin(evmd.HORSCHAINBaseDenom, accTokens),
 			sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
 		}
 
@@ -528,7 +526,7 @@ func addExtraAccounts(kb keyring.Keyring, algo keyring.SignatureAlgo) ([]banktyp
 	accTokens := sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction)
 	accStakingTokens := sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction)
 	coins := sdk.Coins{
-		sdk.NewCoin(TEST_DENOM, accTokens),
+		sdk.NewCoin(evmd.HORSCHAINBaseDenom, accTokens),
 		sdk.NewCoin(sdk.DefaultBondDenom, accStakingTokens),
 	}
 	coins = coins.Sort()
@@ -570,7 +568,6 @@ func initGenFiles(
 	var bankGenState banktypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[banktypes.ModuleName], &bankGenState)
 
-	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, evmnetwork.GenerateBankGenesisMetadata(evmtypes.DefaultEVMChainID)...)
 
 	bankGenState.Balances = banktypes.SanitizeGenesisBalances(genBalances)
 	for _, bal := range bankGenState.Balances {
@@ -581,7 +578,7 @@ func initGenFiles(
 	var evmGenState evmtypes.GenesisState
 	clientCtx.Codec.MustUnmarshalJSON(appGenState[evmtypes.ModuleName], &evmGenState)
 
-	evmGenState.Params.EvmDenom = TEST_DENOM
+	evmGenState.Params.EvmDenom = evmd.HORSCHAINBaseDenom
 	appGenState[evmtypes.ModuleName] = clientCtx.Codec.MustMarshalJSON(&evmGenState)
 
 	appGenStateJSON, err := json.MarshalIndent(appGenState, "", "  ")
