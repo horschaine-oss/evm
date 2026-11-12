@@ -478,6 +478,8 @@ func initTestnetFiles(
 			return err
 		}
 
+		txBuilder.SetGasLimit(1_000_000)
+		txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(evmd.HORSCHAINBaseDenom, math.NewInt(888888889000000))))
 		txBuilder.SetMemo(memo)
 
 		txFactory := tx.Factory{}
